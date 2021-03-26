@@ -71,6 +71,27 @@ public class PlayerTest {
         assertThat(player.isBusted());
     }
 
+    @Test
+    public void playerWith200Bets100WhenWinsBalanceIs310() throws Exception {
+        Player player = createPlayerWithBalanceOf(200);
+        player.playerBets(100);
+
+        player.playerWins();
+
+        assertThat(player.playerBalance())
+                .isEqualTo(310);
+    }
+
+    @Test
+    public void testTotalBetAmount() throws Exception {
+        Player player = createPlayerWithBalanceOf(100);
+        player.playerBets(10);
+        player.playerBets(10);
+        player.playerBets(10);
+        assertThat(player.totalBetAmount())
+                .isEqualTo(30);
+    }
+
 
     private Player createPlayerWithBalanceOf(int amount) {
         Player player = new Player(PlayerIdentity.PLAYER);

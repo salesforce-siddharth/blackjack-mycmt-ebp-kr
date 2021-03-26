@@ -9,6 +9,7 @@ public class Player {
 
     private int balance = 0;
     private int bet = 0;
+    private int totalBet = 0;
     private Hand hand = new Hand();
     PlayerIdentity playerIdentity;
 
@@ -127,5 +128,9 @@ public class Player {
 
     public void playerTies() {
         this.balance += this.bet * 1;
+    }
+
+    public int totalBetAmount(){
+        return totalBet;
     }
 }
