@@ -110,6 +110,7 @@ public class Player {
     }
 
     public void playerBets(int betAmount) {
+        this.totalBet += betAmount;
         this.bet = betAmount;
         this.balance -= betAmount;
     }
@@ -119,6 +120,9 @@ public class Player {
     }
 
     public void playerWins() {
+        if (isBetGreaterEqualTo100()){
+            addBetBonusToBalance();
+        }
         this.balance += this.bet * 2;
     }
 
@@ -132,5 +136,13 @@ public class Player {
 
     public int totalBetAmount(){
         return totalBet;
+    }
+
+    private boolean isBetGreaterEqualTo100(){
+        return this.bet>=100;
+    }
+
+    private void addBetBonusToBalance(){
+        this.balance +=10;
     }
 }
