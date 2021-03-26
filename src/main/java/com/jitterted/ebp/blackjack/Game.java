@@ -2,8 +2,6 @@ package com.jitterted.ebp.blackjack;
 
 import org.fusesource.jansi.Ansi;
 
-import java.util.Scanner;
-
 import static org.fusesource.jansi.Ansi.ansi;
 
 public class Game {
@@ -28,10 +26,8 @@ public class Game {
 
   private final Deck deck;
 
-  private Hand dealerHand = new Hand();
-  private Hand playerHand = new Hand();
-  private int playerBalance = 0;
-  private int playerBet = 0;
+  private static Player player;
+  private static Player dealer;
 
   public static void main(String[] args) {
     displayWelcomeScreen();
@@ -49,13 +45,6 @@ public class Game {
             .fgBlack().a(" BlackJack"));
   }
 
-  private static String continueGameInput(){
-    System.out.println("Play again? (y/n):");
-    Scanner scanner = new Scanner(System.in);
-    String input = scanner.nextLine();
-    return input;
-  }
-
   private static void playGame() {
     Game game = new Game();
 
@@ -63,7 +52,7 @@ public class Game {
     do {
       game.initialDeal();
       game.play();
-      input = continueGameInput();
+      input = player.continueGameInput();
     } while (input.equalsIgnoreCase("y"));
   }
 
@@ -73,42 +62,29 @@ public class Game {
 
   public Game() {
     deck = new Deck();
+    player = new Player(PlayerIdentity.PLAYER);
+    dealer = new Player(PlayerIdentity.DEALER);
   }
 
   public void initialDeal() {
-    dealerHand = new Hand();
-    playerHand = new Hand();
 
     // deal first round of cards, players first
-    dealHand();
+    player.draw(deck);
 
     // deal next round of cards
-    dealHand();
-  }
-
-  private void dealHand() {
-    drawCardIntoPlayerHand();
-    drawCardIntoDealerHand();
-  }
-
-  private void drawCardIntoDealerHand() {
-    dealerHand.add(deck.draw());
-  }
-
-  private void drawCardIntoPlayerHand() {
-    playerHand.add(deck.draw());
+    dealer.draw(deck);
   }
 
   private boolean playRounds(boolean playerBusted){
     while (!playerBusted) {
       displayGameState();
-      String playerChoice = inputFromPlayer().toLowerCase();
+      String playerChoice = player.inputFromPlayer().toLowerCase();
       if (checkIfStartsWithGivenLetter(playerChoice, "s")) {
         break;
       }
       if (checkIfStartsWithGivenLetter(playerChoice, "h")) {
-        drawCardIntoPlayerHand();
-        playerBusted = playerHand.isBusted();
+        player.draw(deck);
+        playerBusted = player.isBusted();
       } else {
         System.out.println(displayInstruction());
       }
@@ -139,107 +115,66 @@ public class Game {
   }
 
   private void dealerPlays() {
-    while (dealerHand.shouldHit()) {
-      drawCardIntoDealerHand();
+    while (dealer.shouldHit()) {
+      dealer.draw(deck);
     }
   }
 
   private void handleGameOutcome() {
-    if (playerHand.isBusted()) {
+    if (player.isBusted()) {
       System.out.println(outcomeMessage.PLAYER_BUST);
-    } else if (dealerHand.isBusted()) {
+    } else if (dealer.isBusted()) {
       System.out.println(outcomeMessage.DEALER_BUST);
-    } else if (playerHand.beats(dealerHand)) {
+    } else if (player.beats(dealer)) {
       System.out.println(outcomeMessage.PLAYER_WINS);
-    } else if (playerHand.pushesWith(dealerHand)) {
+    } else if (player.pushesWith(dealer)) {
       System.out.println(outcomeMessage.PUSH);
     } else {
       System.out.println(outcomeMessage.PLAYER_LOST);
     }
   }
 
-  private String inputFromPlayer() {
-    System.out.println("[H]it or [S]tand?");
-    Scanner scanner = new Scanner(System.in);
-    return scanner.nextLine();
-  }
 
   private void displayGameState() {
     clearScreen();
-    displayDealerHand();
-    displayPlayerHand();
+    dealer.displayHand(false);
+    player.displayHand(false);
   }
 
   private void displayFinalGameState() {
     clearScreen();
-    displayFinalDealerHand();
-    displayPlayerHand();
+    dealer.displayHand(true);
+    player.displayHand(true);
   }
 
-  private void displayDealerHand() {
-    displayDealerUpCard();
-    displayDealerHoleCard();
-  }
-
-  private void displayDealerUpCard() {
-    System.out.println("Dealer has: ");
-    System.out.println(dealerHand.displayFirstCard()); // first card is Face Up
-  }
 
   private void clearScreen() {
     System.out.print(ansi().eraseScreen().cursor(1, 1));
   }
   // second card is the hole card, which is hidden
 
-  private void displayDealerHoleCard() {
-    System.out.print(
-            ansi()
-                    .cursorUp(7)
-                    .cursorRight(12)
-                    .a("┌─────────┐").cursorDown(1).cursorLeft(11)
-                    .a("│░░░░░░░░░│").cursorDown(1).cursorLeft(11)
-                    .a("│░ J I T ░│").cursorDown(1).cursorLeft(11)
-                    .a("│░ T E R ░│").cursorDown(1).cursorLeft(11)
-                    .a("│░ T E D ░│").cursorDown(1).cursorLeft(11)
-                    .a("│░░░░░░░░░│").cursorDown(1).cursorLeft(11)
-                    .a("└─────────┘"));
-  }
-
-  private void displayFinalDealerHand() {
-    System.out.println("Dealer has: ");
-    dealerHand.displayHand();
-    System.out.println(" (" + dealerHand.value() + ")");
-  }
-
-  private void displayPlayerHand() {
-    System.out.println();
-    System.out.println("Player has: ");
-    playerHand.displayHand();
-    System.out.println(" (" + playerHand.value() + ")");
-  }
 
   public void playerDeposits(int amount) {
-    playerBalance += amount;
+    player.playerDeposits(amount);
   }
 
   public void playerBets(int betAmount) {
-    playerBet = betAmount;
-    playerBalance -= betAmount;
+    player.playerBets(betAmount);
   }
 
   public int playerBalance() {
-    return playerBalance;
+    return player.playerBalance();
   }
 
   public void playerWins() {
-    playerBalance += playerBet * 2;
+    player.playerWins();
   }
 
   public void playerLoses() {
-    playerBalance += playerBet * 0;
+    player.playerLoses();
   }
 
   public void playerTies() {
-    playerBalance += playerBet * 1;
+    player.playerTies();
   }
 }
