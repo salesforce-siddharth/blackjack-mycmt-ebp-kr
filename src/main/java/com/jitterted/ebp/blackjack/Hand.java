@@ -15,14 +15,14 @@ public class Hand {
 
   public int value() {
     int handValue = cards
-        .stream()
-        .mapToInt(Card::rankValue)
-        .sum();
+            .stream()
+            .mapToInt(Card::rankValue)
+            .sum();
 
     // does the hand contain at least 1 Ace?
     boolean hasAce = cards
-        .stream()
-        .anyMatch(card -> card.rankValue() == 1);
+            .stream()
+            .anyMatch(card -> card.rankValue() == 1);
 
     // if the total hand value <= 11, then count the Ace as 11 by adding 10
     if (hasAce && handValue <= 11) {
@@ -32,12 +32,19 @@ public class Hand {
     return handValue;
   }
 
+  public boolean shouldHit(){
+    if (this.value()<=16){
+      return true;
+    }
+    return false;
+  }
+
   void displayHand() {
     System.out.println(cards
-                           .stream()
-                           .map(Card::display)
-                           .collect(Collectors.joining(
-                               ansi().cursorUp(6).cursorRight(1).toString())));
+            .stream()
+            .map(Card::display)
+            .collect(Collectors.joining(
+                    ansi().cursorUp(6).cursorRight(1).toString())));
   }
 
   public boolean isBusted() {

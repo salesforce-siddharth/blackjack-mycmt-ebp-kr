@@ -8,6 +8,17 @@ public class Deck {
   private final List<Card> cards = new ArrayList<>();
 
   public Deck() {
+    List<String> cardValues = getDeck();
+
+    for (Suit suit : Suit.values()) {
+      for (String cardValue : cardValues) {
+        cards.add(new Card(suit, cardValue));
+      }
+    }
+    Collections.shuffle(cards);
+  }
+
+  private List<String> getDeck() {
     List<String> cardValues = new ArrayList<>();
     cardValues.add("A");
     cardValues.add("2");
@@ -22,13 +33,7 @@ public class Deck {
     cardValues.add("J");
     cardValues.add("Q");
     cardValues.add("K");
-
-    for (Suit suit : Suit.values()) {
-      for (String cardValue : cardValues) {
-        cards.add(new Card(suit, cardValue));
-      }
-    }
-    Collections.shuffle(cards);
+    return cardValues;
   }
 
   public int size() {

@@ -8,6 +8,24 @@ import static org.fusesource.jansi.Ansi.ansi;
 
 public class Game {
 
+  private enum outcomeMessage {
+    PLAYER_BUST("You Busted, so you lose.  💸"),
+    DEALER_BUST("Dealer went BUST, Player wins! Yay for you!! 💵"),
+    PLAYER_WINS("You beat the Dealer! 💵"),
+    PUSH("Push: The house wins, you Lose. 💸"),
+    PLAYER_LOST("You lost to the Dealer. 💸");
+
+    private String outcome;
+
+    outcomeMessage(String outcome){
+      this.outcome = outcome;
+    }
+
+    public String toString(){
+      return this.outcome;
+    }
+  }
+
   private final Deck deck;
 
   private Hand dealerHand = new Hand();
@@ -23,12 +41,19 @@ public class Game {
 
   private static void displayWelcomeScreen() {
     System.out.println(ansi()
-                           .bgBright(Ansi.Color.WHITE)
-                           .eraseScreen()
-                           .cursor(1, 1)
-                           .fgGreen().a("Welcome to")
-                           .fgRed().a(" Jitterted's")
-                           .fgBlack().a(" BlackJack"));
+            .bgBright(Ansi.Color.WHITE)
+            .eraseScreen()
+            .cursor(1, 1)
+            .fgGreen().a("Welcome to")
+            .fgRed().a(" Jitterted's")
+            .fgBlack().a(" BlackJack"));
+  }
+
+  private static String continueGameInput(){
+    System.out.println("Play again? (y/n):");
+    Scanner scanner = new Scanner(System.in);
+    String input = scanner.nextLine();
+    return input;
   }
 
   private static void playGame() {
@@ -38,9 +63,7 @@ public class Game {
     do {
       game.initialDeal();
       game.play();
-      System.out.println("Play again? (y/n):");
-      Scanner scanner = new Scanner(System.in);
-      input = scanner.nextLine();
+      input = continueGameInput();
     } while (input.equalsIgnoreCase("y"));
   }
 
@@ -76,22 +99,34 @@ public class Game {
     playerHand.add(deck.draw());
   }
 
-  public void play() {
-    // get Player's decision: hit until they stand, then they're done (or they go bust)
-    boolean playerBusted = false;
+  private boolean playRounds(boolean playerBusted){
     while (!playerBusted) {
       displayGameState();
       String playerChoice = inputFromPlayer().toLowerCase();
-      if (playerChoice.startsWith("s")) {
+      if (checkIfStartsWithGivenLetter(playerChoice, "s")) {
         break;
       }
-      if (playerChoice.startsWith("h")) {
+      if (checkIfStartsWithGivenLetter(playerChoice, "h")) {
         drawCardIntoPlayerHand();
         playerBusted = playerHand.isBusted();
       } else {
-        System.out.println("You need to [H]it or [S]tand");
+        System.out.println(displayInstruction());
       }
     }
+    return playerBusted;
+  }
+
+  private String displayInstruction() {
+    return "You need to [H]it or [S]tand";
+  }
+
+  private boolean checkIfStartsWithGivenLetter(String playerChoice, String s) {
+    return playerChoice.startsWith(s);
+  }
+
+  public void play() {
+    // get Player's decision: hit until they stand, then they're done (or they go bust)
+    boolean playerBusted = playRounds(false);
 
     // Dealer makes its choice automatically based on a simple heuristic (<=16, hit, 17>stand)
     if (!playerBusted) {
@@ -104,22 +139,22 @@ public class Game {
   }
 
   private void dealerPlays() {
-    while (dealerHand.value() <= 16) {
+    while (dealerHand.shouldHit()) {
       drawCardIntoDealerHand();
     }
   }
 
   private void handleGameOutcome() {
     if (playerHand.isBusted()) {
-      System.out.println("You Busted, so you lose.  💸");
+      System.out.println(outcomeMessage.PLAYER_BUST);
     } else if (dealerHand.isBusted()) {
-      System.out.println("Dealer went BUST, Player wins! Yay for you!! 💵");
+      System.out.println(outcomeMessage.DEALER_BUST);
     } else if (playerHand.beats(dealerHand)) {
-      System.out.println("You beat the Dealer! 💵");
+      System.out.println(outcomeMessage.PLAYER_WINS);
     } else if (playerHand.pushesWith(dealerHand)) {
-      System.out.println("Push: The house wins, you Lose. 💸");
+      System.out.println(outcomeMessage.PUSH);
     } else {
-      System.out.println("You lost to the Dealer. 💸");
+      System.out.println(outcomeMessage.PLAYER_LOST);
     }
   }
 
@@ -158,16 +193,16 @@ public class Game {
 
   private void displayDealerHoleCard() {
     System.out.print(
-        ansi()
-            .cursorUp(7)
-            .cursorRight(12)
-            .a("┌─────────┐").cursorDown(1).cursorLeft(11)
-            .a("│░░░░░░░░░│").cursorDown(1).cursorLeft(11)
-            .a("│░ J I T ░│").cursorDown(1).cursorLeft(11)
-            .a("│░ T E R ░│").cursorDown(1).cursorLeft(11)
-            .a("│░ T E D ░│").cursorDown(1).cursorLeft(11)
-            .a("│░░░░░░░░░│").cursorDown(1).cursorLeft(11)
-            .a("└─────────┘"));
+            ansi()
+                    .cursorUp(7)
+                    .cursorRight(12)
+                    .a("┌─────────┐").cursorDown(1).cursorLeft(11)
+                    .a("│░░░░░░░░░│").cursorDown(1).cursorLeft(11)
+                    .a("│░ J I T ░│").cursorDown(1).cursorLeft(11)
+                    .a("│░ T E R ░│").cursorDown(1).cursorLeft(11)
+                    .a("│░ T E D ░│").cursorDown(1).cursorLeft(11)
+                    .a("│░░░░░░░░░│").cursorDown(1).cursorLeft(11)
+                    .a("└─────────┘"));
   }
 
   private void displayFinalDealerHand() {

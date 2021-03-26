@@ -2,10 +2,11 @@ package com.jitterted.ebp.blackjack;
 
 import org.eclipse.jetty.server.Connector;
 import org.eclipse.jetty.server.Server;
+import javax.servlet.http.HttpServlet;
 import org.eclipse.jetty.server.ServerConnector;
 import org.eclipse.jetty.servlet.ServletHandler;
 
-public class JettyServer {
+public class JettyServer extends HttpServlet{
   private Server server;
 
   public void start() throws Exception {
